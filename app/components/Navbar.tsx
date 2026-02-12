@@ -1,9 +1,14 @@
+import { UserButton, useUser } from "@clerk/nextjs";
 import { Icon, ListTree, Menu, PackagePlus, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { checkAndAssociation } from "../actions";
 
 const Navbar = () => {
+
+    const {user} = useUser() /* recupe utilisiateur */
+
     
     const pathname = usePathname()
     const[menuOpen, setMenuOpen] = useState(false)
@@ -13,6 +18,12 @@ const Navbar = () => {
             href: "/category" , label : "Catégories", icon : ListTree 
         }
     ]
+
+    useEffect( () => {
+        if(user?.primaryEmailAddress?.emailAddress && user.fullName){
+            checkAndAssociation(user?.primaryEmailAddress?.emailAddress , user.fullName)
+        }
+    })
     
     
     /* Itirer */ 
@@ -60,7 +71,7 @@ const Navbar = () => {
 
                 <div className='hidden space-x-2 sm:flex items-center'>
                     {renderLinks("btn")}
-
+                    <UserButton/>
 
                 </div>
 
@@ -68,6 +79,7 @@ const Navbar = () => {
 
             <div className={`absolute top-0 w-full bg-base-100 h-screen flex flex-col gap-2 p-4 transition-all duration-300 sm:hidden z-50 ${menuOpen ? "left-0" : "-left-full"} `}>
                 <div className='flex justify-between'>
+                    <UserButton/>
                     <button 
                         className='btn w-fit sm:hidden btn-sm'
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -75,8 +87,9 @@ const Navbar = () => {
                         <X className='w-4 h-4' />
                     </button>
                 </div>
+                {renderLinks("btn")}
             </div>
-            {renderLinks("btn")}
+            
 
         </div>
     )
