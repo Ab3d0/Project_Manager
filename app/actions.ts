@@ -2,6 +2,7 @@
 
 import { Category } from "@/lib/generated/prisma/client"
 import prisma from "@/lib/prisma"
+import { FormDataType, Product } from "@/type"
 
 export async function checkAndAssociation(email : string , name : string){
     if(!email) return   
@@ -142,6 +143,164 @@ export async function readCategories(email : string) : Promise<Category[] | unde
         console.error(error);
     }
 }
+
+export async function createProduct(formData : FormDataType , email : string ){
+    try {
+        const {name , description , price , imageUrl , categoryId , unit} = formData;
+
+        if(!email || !price || !categoryId  || !email){
+            throw new Error("L'email de l'association est  requis pour la mise à jour.");
+        }
+        const safeImageUrl = imageUrl || ""
+        const safeUnit = unit || ""
+
+
+        const association = await getAssociation(email)
+        if(!association){
+        throw new Error("Aucune association trouvée avec cet email");
+        }
+        
+        await prisma.product.create({
+            data : {
+                name , 
+                description , 
+                price : Number(price), /*Sécurité*/
+                imageUrl : safeImageUrl,
+                categoryId,
+                unit : safeUnit,
+                associationId : association.id,
+            }
+        })
+
+    }catch(error){
+        console.error(error);
+    }
+}
+
+export async function updateProduct(formData : FormDataType, email : string){
+     try {
+        const {id , name , description , price , imageUrl } = formData;
+
+        if(!email || !price || !id || !email){
+            throw new Error("L'email de l'association est  requis pour la mise à jour.");
+        }
+       
+        const association = await getAssociation(email)
+        if(!association){
+        throw new Error("Aucune association trouvée avec cet email");
+        }
+        
+        await prisma.product.update({
+            where : {
+                id : id,
+                associationId : association.id
+            },            
+        
+            data : {
+                name , 
+                description , 
+                price : Number(price), /*Sécurité*/
+                imageUrl: imageUrl,
+            }
+        })
+
+    }catch(error){
+        console.error(error);
+    }
+}
+
+export async function deleteProduct(id : string , email :string){
+     try {
+       
+        if(!id || !email){
+            throw new Error("L'id est requis pour la suppression.");
+        }
+       
+        const association = await getAssociation(email)
+        if(!association){
+        throw new Error("Aucune association trouvée avec cet email");
+        }
+        
+        await prisma.product.delete({
+            where : {
+                id : id,
+                associationId : association.id
+            },            
+        })
+
+    }catch(error){
+        console.error(error);
+    }
+}
+
+export async function readProduct(email :string) : Promise<Product[] | undefined>{
+     try {
+       
+        if(!email){
+            throw new Error("L'email est requis pour la suppression.");
+        }
+       
+        const association = await getAssociation(email)
+        if(!association){
+        throw new Error("Aucune association trouvée avec cet email");
+        }
+        
+        const products = await prisma.product.findMany({
+            where : {
+                associationId : association.id
+            },  
+            include : {
+                category : true
+            }          
+        })
+
+        return products.map(product => ({
+            ...product,
+            categoryName : product.category?.name
+        }))
+
+    }catch(error){
+        console.error(error);
+    }
+}
+
+export async function readProductById(productId: string, email :string) : Promise<Product | undefined>{
+     try {
+       
+        if(!email){
+            throw new Error("L'email est requis pour la suppression.");
+        }
+       
+        const association = await getAssociation(email)
+        if(!association){
+        throw new Error("Aucune association trouvée avec cet email");
+        }
+        
+        const product = await prisma.product.findUnique({
+            where : {
+                id: productId , 
+                associationId : association.id
+            },  
+            include : {
+                category : true
+            }          
+        })
+        if(!product){
+            return undefined
+        }
+
+        return {
+            ...product,
+            categoryName : product.category?.name
+        }
+
+    }catch(error){
+        console.error(error);
+    }
+}
+
+
+
 
 
 
