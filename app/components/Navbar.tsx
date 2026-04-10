@@ -1,3 +1,4 @@
+"use client"
 import { UserButton, useUser } from "@clerk/nextjs";
 import { Icon, ListTree, Menu, PackagePlus, ShoppingBasket, X } from "lucide-react";
 import Link from "next/link";
@@ -14,8 +15,10 @@ const Navbar = () => {
     const[menuOpen, setMenuOpen] = useState(false)
     
     const navLinks = [
-        { href: "/new-product" , label : "Nouveau produit", icon : ShoppingBasket,},
+        { href: "/products" , label : "Produits", icon : ShoppingBasket},
+        { href: "/new-product" , label : "Nouveau produit", icon : PackagePlus},
         { href: "/category" , label : "Catégories", icon : ListTree }
+
     ]
 
     useEffect( () => {

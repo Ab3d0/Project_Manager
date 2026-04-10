@@ -1,34 +1,61 @@
 import { existsSync } from "fs";
-import { mkdir } from "fs/promises";
-import { Recursive } from "next/font/google";
+import { mkdir, writeFile, unlink } from "fs/promises";
+
 import { NextRequest, NextResponse } from "next/server";
 import { join } from "path";
 
 export async function POST(request: NextRequest){
-    const data = await request.formData()
-    const file : File | null = data.get("file") as unknown as File
+    try{
+        const data = await request.formData()
+        const file : File | null = data.get("file") as unknown as File
 
-    if(!file){
-        return NextResponse.json({success : false})
+        if(!file){
+            return NextResponse.json({success : false})
+        }
+
+        const bytes = await file.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+
+
+        /*Socker image */
+
+        const uploadDir = join(process.cwd() , "public" , "uploads")
+        if(existsSync(uploadDir)){
+            await mkdir(uploadDir , {recursive : true})
+        }
+
+        const ext = file.name.split('.').pop()
+        const UniqueName = crypto.randomUUID() + '.' + ext
+        const filePath = join(uploadDir, UniqueName)
+        await writeFile(filePath, buffer)
+        const publicPath = `/uploads/${UniqueName}`
+        return NextResponse.json({success: true, path : publicPath})
+
+
+    }catch (error){
+        console.error(error)
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+}
 
+export async function DELETE(request: NextRequest){
+    try {
+        const { path } = await request.json()
+        if (!path) {
+            return NextResponse.json({success: false, message: "Chemin invalide."} , {status : 400});
+        }
 
-    /*Socker image */
+        const filePath = join(process.cwd(), "public", path)
 
-    const uploadDir = join(process.cwd() , "public" , "uploads")
-    if(existsSync(uploadDir)){
-        await mkdir(uploadDir , {recursive : true})
+        if(!existsSync(filePath)){
+            return NextResponse.json({ success : false, message: "Fichier supprimé avec succès"}, {status: 201})
+        }
+
+        await unlink(filePath)
+         return NextResponse.json({ success : true, message: "Fichier non trouvé."}, {status: 404})
+
+    } catch (error){
+        console.error(error)
     }
-
-    const ext = file.name.split('.').pop()
-    const UniqueName = crypto.randomUUID() + '.' + ext
-    const filePath = join(uploadDir, UniqueName)
-    const publicPath = `/uploads/${UniqueName}`
-    return NextResponse.json({success: true, path : publicPath})
-
-
 
 }
