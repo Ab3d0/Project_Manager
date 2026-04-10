@@ -1,10 +1,11 @@
 "use client"
 import { UserButton, useUser } from "@clerk/nextjs";
-import { Icon, ListTree, Menu, PackagePlus, ShoppingBasket, X } from "lucide-react";
+import { Icon, ListTree, Menu, PackagePlus, ShoppingBasket, Warehouse, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { checkAndAssociation } from "../actions";
+import Stock from "./Stock";
 
 const Navbar = () => {
 
@@ -46,6 +47,12 @@ const Navbar = () => {
 
                 )
             })}
+            <button className="btn btn-sm" 
+                onClick={()=> (document.getElementById('my_modal_3') as HTMLDialogElement ).showModal()}>
+                    <Warehouse className="w-4 h-4" />
+                    Alimenter le stock
+            </button>
+
         </>
     )
 
@@ -91,7 +98,7 @@ const Navbar = () => {
                 </div>
                 {renderLinks("btn")}
             </div>
-            
+            <Stock />
 
         </div>
     )
